@@ -8,9 +8,10 @@
 using namespace std;
 using namespace arma;
 
-// Terminal OE
-// g++-9 -o exe -std=c++11 Pro5_Functions.cpp Pro5_main.cpp Pro5_Tests.cpp -L/usr/local/lib -L/usr/local/Cellar/armadillo/9.600.6/lib/ -I/usr/local/Cellar/armadillo/9.600.6/include/ -larmadillo -lomp
-
+/*
+Terminal OE
+g++-9 -o exe -std=c++11 Pro5_Functions.cpp Pro5_main.cpp Pro5_Tests.cpp -L/usr/local/lib -L/usr/local/Cellar/armadillo/9.600.6/lib/ -I/usr/local/Cellar/armadillo/9.600.6/include/ -larmadillo -lomp
+*/
 
 vec m_vector(double min, double max,double step_length){
     int num_steps = static_cast<int>((max-min)/step_length);
