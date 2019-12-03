@@ -5,9 +5,12 @@
 #include <random>
 #include <chrono>
 
+
+
 using namespace std;
 using namespace arma;
 
+#define EPS pow(10,-8)
 
 vec m_vector(double min, double max,double step_length){
     int num_steps = static_cast<int>((max-min)/step_length);
@@ -40,15 +43,58 @@ void transaction_savings(int i,int j, double lambda, vec& M){
 void transaction_taxes(int i, int j, double t, vec& M){
     mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
     double e = generate_canonical< double, 128 > (rng);
-    double T = t*(M(i)+M(j));
-    double St = (1-t)*(M(i)+M(j));
-    M(i) = e*St;
-    M(j) = (1-e)*St;
+    double S = M(i)+M(j);
+    double mi = e*S;
+    double mj = (1-e)*S;
+    /*
+    M(i) = mi ; M(j) = mj;
+    double T = 0;
+    for (uword i=0;i<M.n_elem;i++){
+        T += t*M(i);
+        M(i) = (1-t)*M(i);
+    }
     M += T/M.n_elem;
+    */
+
+    double trans = mi - M(i);
+    double Tax = abs(trans)/(1+1/t);
+    M(i) = mi; M(j) = mj;
+
+    if (trans > 0){
+        M(i) -= Tax;    }
+    else{M(j) -= Tax;}
+    M += Tax/M.n_elem;
+
     return;
 } // end of transaction_taxes
 
-void Financial_analysis(int Ex, int Cycles, string file1, string file2, double lambda){
+vector<int> Sampling_Rule(vec M, double alpha){
+    mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
+    vector<int> index = vector<int>{0, 0};
+    int N = M.n_elem;
+
+    int i1 = 0; int i2 = 0;
+    int confirm = 0;
+
+    double P = 0;
+    double r = 0;
+
+    while (i1 == i2 or confirm == 0){
+    i1 = static_cast<int>( (generate_canonical< double, 128 > (rng))*static_cast<double>(N) );
+    i2 = static_cast<int>( (generate_canonical< double, 128 > (rng))*static_cast<double>(N) );
+    P = pow(abs(M(i1) - M(i2)), -alpha);
+    r = generate_canonical< double, 128 > (rng);
+
+    if (r < P or abs(M(i1)-M(i2)) < EPS){
+        confirm = 1;
+    } //end if
+
+    } //end while
+    index[0] = i1 ; index[1] = i2;
+    return index;
+} // end function Sampling_Rule
+
+void Financial_analysis(int Ex, int Cycles, string file1, string file2, double lambda, double alpha){
     mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
     int N = 500;
     int m0 = 100;
@@ -73,13 +119,11 @@ void Financial_analysis(int Ex, int Cycles, string file1, string file2, double l
         // Start MC loop
         for (int j = 0; j<Cycles;j++){
 
-            int i1 = 0; int i2 = 0;
-            while (i1 == i2){
-            i1 = static_cast<int>( (generate_canonical< double, 128 > (rng))*static_cast<double>(N) );
-            i2 = static_cast<int>( (generate_canonical< double, 128 > (rng))*static_cast<double>(N) );
-            }
-            transaction_savings(i1,i2,lambda,M);
 
+            vector<int> index = Sampling_Rule(M,alpha);
+
+            transaction(index[0],index[1],M);
+            //transaction_taxes(i1,i2,lambda,M);
             if(thread_id==0 and counter==0){
                 if(j == 0){
                 vec M_temp = sort(M);
@@ -104,7 +148,7 @@ void Financial_analysis(int Ex, int Cycles, string file1, string file2, double l
 
         if(thread_id == 0 and counter == 0){
             ofstream output;
-            output.open("Median.txt",ios::app);
+            output.open(filename2,ios::app);
             output << endl;
             output.close();
         }
@@ -137,7 +181,7 @@ void no_savings(int Ex, int Cycles){
 
     time_t start, finish;
     start = clock();
-    Financial_analysis(Ex,Cycles,"Money_distributions_no_savings","Median",0);
+    Financial_analysis(Ex,Cycles,"Money_distributions_no_savings","Median",0,0);
     finish = clock();
     cout << "time used by function Financial_analysis: " << (double) (finish-start)/CLOCKS_PER_SEC << " seconds" << endl;
     return;
@@ -150,7 +194,7 @@ void savings(int Ex, int Cycles){
         double L = lambdas(i);
         time_t start, finish;
         start = clock();
-        Financial_analysis(Ex,Cycles,"Money_distributions_savings_L_" + to_string(L),"Median_L_" + to_string(L),L);
+        Financial_analysis(Ex,Cycles,"Money_distributions_savings_L_" + to_string(L),"Median_L_" + to_string(L),L,0);
         finish = clock();
         cout << "time used by function Financial_analysis: " << (double) (finish-start)/CLOCKS_PER_SEC << " seconds" << endl;
     }
