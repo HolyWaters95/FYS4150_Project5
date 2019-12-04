@@ -1,4 +1,4 @@
-from Py_Functions import readarrays
+from Py_Functions import readarrays, plot_median
 from numpy import array, zeros, linspace, log, log10, sort, polyfit, polyval
 import matplotlib.pyplot as plt
 import scipy.stats as stats
@@ -18,13 +18,16 @@ for R in range(4):
 w, m_intervals, patches = plt.hist(Money,len(N),density=True)
 
 '''
+'''
 coeff = polyfit(m_intervals[:-1],w,10)
 W = polyval(coeff,m_intervals[:-1])
 plt.plot(m_intervals[:-1],W,'r')
 
 fit_alpha, fit_loc, fit_beta=stats.gamma.fit(w)
 
-plt.plot(
+plt.plot()
+'''
+
 '''
 #plt.plot(m_intervals[:-1],w,'r')
 
@@ -54,15 +57,28 @@ filestart = "../Results/Median"
 
 Nvalues = ["500", "1000"]
 Lvalues = ["0.250000", "0.500000", "0.900000"]
-Avalues = ["0.500000", "1.000000", "1.500000", "2.000000"]
-Gvalues = ["1.000000", "2.000000", "3.000000", "4.000000"]
+avalues = ["0.500000", "1.000000", "1.500000", "2.000000"]
+gvalues = ["1.000000", "2.000000", "3.000000", "4.000000"]
 
 #task a
-filenames.append(filestart + "_N_" + Nvalues[0])
+filenames.append(filestart + "_N_" + Nvalues[0] + ".txt")
 
-#task b
-for 
+#task c
+for L in Lvalues:
+	filenames.append(filestart + "_N_" + Nvalues[0] + "_L_" + L + ".txt")
 
+#task d
+for N in Nvalues:
+	for L in ["0.000000","0.500000"]:
+		for a in avalues:
+			filenames.append(filestart + "_N_" + N + "_L_" + L + "_a_" + a + ".txt")
 
+#task e
+for L in ["0.000000","0.500000"]:
+	for a in ["1.000000","2.000000"]:
+		for g in gvalues:
+			filenames.append(filestart + "_N_" + Nvalues[1] + "_L_" + L + "_a_" + a + "_g_" + g + ".txt")
 
+for f in filenames:
+	plot_median(f,save=True)
 
