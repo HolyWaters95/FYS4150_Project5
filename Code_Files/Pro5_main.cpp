@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <armadillo>
 #include <omp.h>
 #include "time.h"
@@ -30,10 +31,12 @@ int main(){
     cout << "Number of MC Cycles? \n";
     cin >> Cycles;
 
-    Financial_analysis(Ex,Cycles,"Test_sampling","Test_smpl_median",0,1);
 
-    //Financial_analysis(Ex,Cycles,"Tax_test","Tax_Median",1.);
-    //savings(Ex,Cycles);
+
+    task_a(Ex,Cycles);
+    task_c(Ex,Cycles);
+    task_d(Ex,Cycles);
+    task_e(Ex,Cycles);
 
     return 0;
 } // end main

@@ -2,7 +2,7 @@ from Py_Functions import readarrays
 from numpy import array, zeros, linspace, log, log10, sort, polyfit, polyval
 import matplotlib.pyplot as plt
 import scipy.stats as stats
-
+'''
 N = range(1,501)
 Money = []
 
@@ -47,15 +47,22 @@ print slope
 plt.show()
 
 
+'''
 
-median = readarrays("../build-Laptop_Project-Desktop_Qt_5_13_0_MinGW_64_bit-Debug/Test_smpl_median.txt")[0][0]
+filenames = []
+filestart = "../Results/Median"
+
+Nvalues = ["500", "1000"]
+Lvalues = ["0.250000", "0.500000", "0.900000"]
+Avalues = ["0.500000", "1.000000", "1.500000", "2.000000"]
+Gvalues = ["1.000000", "2.000000", "3.000000", "4.000000"]
+
+#task a
+filenames.append(filestart + "_N_" + Nvalues[0])
+
+#task b
+for 
 
 
-
-
-N = log10(1000*array(range(1,len(median)+1)))
-plt.figure()
-plt.plot(N,median,'.',N,median,'r')
-plt.show()
 
 

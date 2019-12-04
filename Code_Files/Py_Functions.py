@@ -90,4 +90,12 @@ def readmatrices(filename):
 		
 	return A,len(A)
 
+def plot_median(filename):
+	median = readarrays(filename)[0][0]
+
+	N = log10(1000*array(range(1,len(median)+1)))
+	plt.figure()
+	plt.plot(N,median,'.',N,median,'r')
+	plt.show()
+
 
