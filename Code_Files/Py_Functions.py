@@ -92,14 +92,18 @@ def readmatrices(filename):
 
 def plot_median_d(filename,save=False):
 	median = readarrays(filename)[0][0]
-	D = filename.split(
+	D = filename.split("_") ; D = int(D[2])
 	filename = filename.split("/") ; filename = filename[2].split(".txt") ; filename = filename[0]
-	N = log10(100000*array(range(1,len(median)+1)))
+	N = log10( (10**(D-2)) * array(range(1,len(median)+1)) )
+
 	plt.figure()
 	plt.title(filename)
 	plt.plot(N,median,'.',N,median,'r')
+	plt.xlabel("$\log_{10}(MC)$")
+	plt.ylabel("$\mu_{1/2}$")
 	if save:
-		plt.savefig("../Plots/Plots_d/" + filename + ".png")	
+		Folder = "Plots_d_D_%s/" % D
+		plt.savefig("../Plots/Plots_d/" + Folder + filename + ".png")	
 
 	plt.close()
 

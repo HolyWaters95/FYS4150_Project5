@@ -1,4 +1,4 @@
-from Py_Functions import readarrays, plot_median
+from Py_Functions import readarrays, plot_median_d
 from numpy import array, zeros, linspace, log, log10, sort, polyfit, polyval
 import matplotlib.pyplot as plt
 import matplotlib.image as pmg
@@ -54,8 +54,11 @@ plt.show()
 
 '''
 
+D = raw_input("Exponent of D? \n")
+
+
 filenames = []
-filestart = "../Results/Median_D_3"
+filestart = "../Results/Median_D_%s" % D
 
 Nvalues = ["500", "1000"]
 Lvalues = ["0.250000", "0.500000", "0.900000"]
@@ -83,7 +86,7 @@ for L in ["0.000000","0.500000"]:
 
 '''
 for f in filenames:
-	plot_median(f,save=True)
+	plot_median_d(f,save=True)
 
 
 
