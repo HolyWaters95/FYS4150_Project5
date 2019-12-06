@@ -2,6 +2,7 @@
 #include <fstream>
 #include <armadillo>
 #include <omp.h>
+#include <stdio.h>
 #include "time.h"
 #include <random>
 #include <chrono>
