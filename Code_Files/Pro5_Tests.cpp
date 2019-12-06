@@ -120,3 +120,25 @@ void test_stability_taxes(){
     cout << "----------------------" << endl;
 } //end stability_taxes test
 
+/* This test only runs when Sampling_Rule is configured to accept double& P as argument
+void test_P(){
+    int N = 1000;
+    vec M = vec(N,fill::ones);
+
+    mat c = mat(M.n_elem,M.n_elem,fill::zeros);
+    double P = 0;
+
+    // Start MC loop
+    for (int j = 0; j<100000;j++){
+
+
+        vector<int> index = Sampling_Rule(M,c,P,2,2);
+
+        transaction(index[0],index[1],0,M);
+
+        if (j % 100 == 0){
+            cout << P << endl;
+        }
+    }
+} //end test P
+*/

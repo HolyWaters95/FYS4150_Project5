@@ -174,7 +174,8 @@ void Financial_analysis(int Ex, int Cycles, int N, string file1, string file2, d
 void task_a(int Ex, int Cycles){
     cout << "Task a) \n ------------------" << endl;
     int N = 500;
-    string numbers = "_N_" + to_string(N);
+    int D = static_cast<int>(log10(Cycles));
+    string numbers = "_D_" + to_string(D) + "_N_" + to_string(N);
 
     time_t start, finish;
     start = clock();
@@ -186,14 +187,14 @@ void task_a(int Ex, int Cycles){
 
 void task_c(int Ex, int Cycles){
     cout << "Task c) \n ------------------" << endl;
-
+    int D = static_cast<int>(log10(Cycles));
     vec lambdas = vec("0.25 0.5 0.9");
     int N = 500;
     for (uword i = 0;i<lambdas.n_elem;i++){
         double L = lambdas(i);
         cout << "Running Financial Analysis for lambda = " << L << endl;
 
-        string numbers = "_N_" + to_string(N) + "_L_" + to_string(L);
+        string numbers = "_D_" + to_string(D) + "_N_" + to_string(N) + "_L_" + to_string(L);
         time_t start, finish;
         start = clock();
         Financial_analysis(Ex,Cycles,N,"Money_distributions" + numbers,"Median" + numbers,L);
@@ -205,7 +206,7 @@ void task_c(int Ex, int Cycles){
 
 void task_d(int Ex, int Cycles){
     cout << "Task d) \n ------------------" << endl;
-
+    int D = static_cast<int>(log10(Cycles));
     vector<int> Nvalues = vector<int>{500,1000};
     vec lambdas = vec("0 0.5");
     vec alphas = vec("0.5 1.0 1.5 2.0");
@@ -216,7 +217,7 @@ void task_d(int Ex, int Cycles){
             for (uword k = 0;k<alphas.n_elem;k++){
                 double alpha = alphas(k);
 
-                string numbers = "_N_" + to_string(N) + "_L_" + to_string(L) + "_a_" + to_string(alpha);
+                string numbers = "_D_" + to_string(D) + "_N_" + to_string(N) + "_L_" + to_string(L) + "_a_" + to_string(alpha);
                 cout << "Running Financial Analysis for" << endl
                      << "N = " << N << endl
                      << "L = " << L << endl
@@ -234,7 +235,7 @@ void task_d(int Ex, int Cycles){
 
 void task_e(int Ex, int Cycles){
     cout << "Task e) \n ------------------" << endl;
-
+    int D = static_cast<int>(log10(Cycles));
     int N = 1000;
     vec lambdas = vec("0 0.5");
     vec alphas = vec("1.0 2.0");
@@ -247,7 +248,7 @@ void task_e(int Ex, int Cycles){
             for (uword k = 0;k<gammas.n_elem;k++){
                 double gamma = gammas(k);
 
-                string numbers = "_N_" + to_string(N) + "_L_" + to_string(L) + "_a_" + to_string(alpha) + "_g_" + to_string(gamma);
+                string numbers = "_D_" + to_string(D) + "_N_" + to_string(N) + "_L_" + to_string(L) + "_a_" + to_string(alpha) + "_g_" + to_string(gamma);
                 cout << "Running Financial Analysis for" << endl
                      << "L = " << L << endl
                      << "a = " << alpha << endl

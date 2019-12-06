@@ -55,26 +55,26 @@ plt.show()
 '''
 
 filenames = []
-filestart = "../Results/Median"
+filestart = "../Results/Median_D_3"
 
 Nvalues = ["500", "1000"]
 Lvalues = ["0.250000", "0.500000", "0.900000"]
 avalues = ["0.500000", "1.000000", "1.500000", "2.000000"]
 gvalues = ["1.000000", "2.000000", "3.000000", "4.000000"]
-
+'''
 #task a
 filenames.append(filestart + "_N_" + Nvalues[0] + ".txt")
 
 #task c
 for L in Lvalues:
 	filenames.append(filestart + "_N_" + Nvalues[0] + "_L_" + L + ".txt")
-
+'''
 #task d
 for N in Nvalues:
 	for L in ["0.000000","0.500000"]:
 		for a in avalues:
 			filenames.append(filestart + "_N_" + N + "_L_" + L + "_a_" + a + ".txt")
-
+'''
 #task e
 for L in ["0.000000","0.500000"]:
 	for a in ["1.000000","2.000000"]:
@@ -84,6 +84,6 @@ for L in ["0.000000","0.500000"]:
 '''
 for f in filenames:
 	plot_median(f,save=True)
-'''
+
 
 

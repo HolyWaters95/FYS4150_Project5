@@ -28,3 +28,4 @@ void test_sampling();
 void test_stability();
 void test_stability_savings();
 void test_stability_taxes();
+void test_P();
