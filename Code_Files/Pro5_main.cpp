@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <armadillo>
 #include <omp.h>
 #include "time.h"
@@ -16,6 +17,7 @@ int main(){
     cout << "Do you want to run tests? y/n \n";
     cin >> Tests;
     if (Tests == "y"){
+        test_sampling();
         test_stability();
         test_stability_savings();
         test_stability_taxes();
@@ -29,7 +31,12 @@ int main(){
     cout << "Number of MC Cycles? \n";
     cin >> Cycles;
 
-    //savings(Ex,Cycles);
+
+
+    task_a(Ex,Cycles);
+    task_c(Ex,Cycles);
+    task_d(Ex,Cycles);
+    task_e(Ex,Cycles);
 
     return 0;
 } // end main
