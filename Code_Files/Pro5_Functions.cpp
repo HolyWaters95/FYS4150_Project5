@@ -71,6 +71,7 @@ vector<int> Sampling_Rule(vec M, mat& c, double alpha = 0, double gamma = 0){
     double r = 0;
 
     while (i1 == i2 or confirm == 0){
+    confirm = 0;
     i1 = static_cast<int>( (generate_canonical< double, 128 > (rng))*static_cast<double>(N) );
     i2 = static_cast<int>( (generate_canonical< double, 128 > (rng))*static_cast<double>(N) );
     P = pow(abs(M(i1) - M(i2)), -alpha) * pow(c(i1,i2)+1,gamma);
@@ -88,7 +89,7 @@ vector<int> Sampling_Rule(vec M, mat& c, double alpha = 0, double gamma = 0){
 
 void Financial_analysis(int Ex, int Cycles, int N, string file1, string file2, double lambda = 0, double alpha = 0, double gamma = 0){
     mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
-    int m0 = 100;
+    int m0 = 1;
     vec M;
 
     vec m = m_vector(0,N*m0,(N*m0)/500);

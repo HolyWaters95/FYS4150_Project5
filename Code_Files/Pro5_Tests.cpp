@@ -48,7 +48,7 @@ void test_stability(){
     int counter = 0;
     while (counter < 10){
 
-    vector<int> index = Sampling_Rule(M2,c);
+    vector<int> index = Sampling_Rule(M2,c,0,2);
     transaction(index[0],index[1],0,M2);
 
     counter += 1;

@@ -32,11 +32,12 @@ int main(){
     cin >> Cycles;
 
 
-
+    /*
     task_a(Ex,Cycles);
     task_c(Ex,Cycles);
     task_d(Ex,Cycles);
     task_e(Ex,Cycles);
+    */
 
     return 0;
 } // end main
