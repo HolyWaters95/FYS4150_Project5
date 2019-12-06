@@ -2,6 +2,7 @@
 #include <fstream>
 #include <armadillo>
 #include <omp.h>
+#include <stdio.h>
 #include "time.h"
 #include <random>
 #include <chrono>
@@ -32,11 +33,12 @@ int main(){
     cin >> Cycles;
 
 
+    Financial_analysis(Ex,Cycles,500,"OE-TEST","OE-TEST-median");
 
-    task_a(Ex,Cycles);
-    task_c(Ex,Cycles);
-    task_d(Ex,Cycles);
-    task_e(Ex,Cycles);
+    //task_a(Ex,Cycles);
+    //task_c(Ex,Cycles);
+    //task_d(Ex,Cycles);
+    //task_e(Ex,Cycles);
 
     return 0;
 } // end main

@@ -10,7 +10,7 @@ using namespace arma;
 
 //Functions
 vec m_vector(double min, double max,double step_length);
-void Financial_analysis(int Ex, int Cycles, string file1, string file2, double lambda = 0, double alpha = 0, double gamma = 0);
+void Financial_analysis(int Ex, int Cycles, int N, string file1, string file2, double lambda = 0, double alpha = 0, double gamma = 0);
 void transaction(int i,int j, double lambda, vec& M);
 void transaction_taxes(int i, int j, double t, vec& M);
 vector<int> Sampling_Rule(vec M, mat& c, double alpha = 0, double gamma = 0);
