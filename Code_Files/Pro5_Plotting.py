@@ -1,6 +1,8 @@
 from Py_Functions import readarrays, plot_median
 from numpy import array, zeros, linspace, log, log10, sort, polyfit, polyval
 import matplotlib.pyplot as plt
+import matplotlib.image as pmg
+
 import scipy.stats as stats
 '''
 N = range(1,501)
@@ -79,6 +81,9 @@ for L in ["0.000000","0.500000"]:
 		for g in gvalues:
 			filenames.append(filestart + "_N_" + Nvalues[1] + "_L_" + L + "_a_" + a + "_g_" + g + ".txt")
 
+'''
 for f in filenames:
 	plot_median(f,save=True)
+'''
+
 

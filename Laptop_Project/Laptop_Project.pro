@@ -5,7 +5,7 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 
-QMAKE_CXXFLAGS_DEBUG += -O3 -fopenmp -larmadillo
+QMAKE_CXXFLAGS_DEBUG += -O3 #-fopenmp -larmadillo
 
 SOURCES += \
     ../Code_Files/Pro5_Functions.cpp \
