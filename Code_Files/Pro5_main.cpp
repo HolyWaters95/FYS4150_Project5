@@ -33,8 +33,12 @@ int main(){
     cin >> Cycles;
 
 
+    Financial_analysis(Ex,Cycles,1000,"Money_distributions_D_7_N_1000_L_0.000000_a_2.000000_g_2.000000","Median_D_7_N_1000_L_0.000000_a_2.000000_g_2.000000",0,2.0,2.0);
+    //task_e(Ex,Cycles);
 
-    task_d(Ex,Cycles);
+    /*Median_D_7_N_1000_L_0.000000_a_2.000000_g_1.000000
+     * Median_D_7_N_1000_L_0.500000_a_2.000000_g_1.000000
+     */
 
 
     return 0;

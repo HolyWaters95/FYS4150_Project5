@@ -1,5 +1,6 @@
-from Py_Functions import readarrays, plot_median_d
-from numpy import array, zeros, linspace, log, log10, sort, polyfit, polyval
+from Py_Functions import readarrays, plot_median_d, plot_prob_distribution_d, log_arrays, nlog_arrays
+import Py_Functions as pf
+from numpy import array, zeros, linspace, log, log10, exp, sort, polyfit, polyval
 import matplotlib.pyplot as plt
 import matplotlib.image as pmg
 
@@ -54,7 +55,7 @@ plt.show()
 
 '''
 
-D = raw_input("Exponent of D? \n")
+D = 3
 
 
 filenames = []
@@ -72,11 +73,7 @@ filenames.append(filestart + "_N_" + Nvalues[0] + ".txt")
 for L in Lvalues:
 	filenames.append(filestart + "_N_" + Nvalues[0] + "_L_" + L + ".txt")
 '''
-#task d
-for N in Nvalues:
-	for L in ["0.000000","0.500000"]:
-		for a in avalues:
-			filenames.append(filestart + "_N_" + N + "_L_" + L + "_a_" + a + ".txt")
+
 '''
 #task e
 for L in ["0.000000","0.500000"]:
@@ -85,8 +82,109 @@ for L in ["0.000000","0.500000"]:
 			filenames.append(filestart + "_N_" + Nvalues[1] + "_L_" + L + "_a_" + a + "_g_" + g + ".txt")
 
 '''
-for f in filenames:
-	plot_median_d(f,save=True)
 
+yn = raw_input("Do you want to plot medians for task d)? y/n \n")
+if yn == "y":
+	filenames = []
+	D = raw_input("Exponent of D? \n")
+	filestart = "../Results/Median_D_%s" % D	
+	for N in Nvalues:
+		for L in ["0.000000","0.500000"]:
+			for a in avalues:
+				filenames.append(filestart + "_N_" + N + "_L_" + L + "_a_" + a + ".txt")
 
+	for f in filenames:
+		plot_median_d(f,save=False)
 
+yn = raw_input("Do you want to plot probability distributions for d)? y/n \n")
+if yn == "y":
+	filenames = []
+	D = raw_input("Exponent of D? \n")
+	filestart = "../Results/Money_distributions_D_%s" % D	
+	for N in Nvalues:
+		for L in ["0.000000","0.500000"]:
+			for a in avalues:
+				filenames.append(filestart + "_N_" + N + "_L_" + L + "_a_" + a + ".txt")
+				#if N == "1000" and L == "0.000000" and a == "2.000000":
+				#	filenames.append(filestart + "_N_" + N + "_L_" + L + "_a_" + "9.000000" + ".txt")	
+	
+
+	W = [] ; M = []
+	for i in range(len(filenames)):
+		f = filenames[i]
+		w, m = plot_prob_distribution_d(f,save=False)
+		W.append(w) ; M.append(m[:-1])
+		
+	i = 0	
+	while i < len(W):
+		
+		pf.plot_loglogW(M[i:i+4],W[i:i+4],filenames[i:i+4],save=True)
+		pf.Pareto_dist_d(M[i:i+4],W[i:i+4],filenames[i:i+4],save=True)
+		pf.Gibbs_dist_d(M[i:i+4],W[i:i+4],filenames[i:i+4],save=True)		
+		i += 4
+
+yn = raw_input("Do you want to plot medians for task e)? y/n \n")
+if yn == "y":
+	filenames = []
+	D = raw_input("Exponent of D? \n")
+	filestart = "../Results/Median_D_%s_N_1000" % D	
+	for L in ["0.000000","0.500000"]:
+		for a in ["1.000000","2.000000"]:
+			for g in gvalues:
+				filenames.append(filestart + "_L_" + L + "_a_" + a + "_g_" + g + ".txt")
+	filenames.append("../Results/Median_D_8_N_1000_L_0.500000_a_2.000000_g_1.000000.txt")
+	#for f in filenames:
+	#	pf.plot_median_e(f,save=True)
+	pf.plot_median_e(filenames[-1],save=True)
+
+w,m = plot_prob_distribution_d("../Results/Money_distributions_D_7_N_1000_L_0.000000_a_2.000000_g_2.000000.txt")
+
+logm, logw = log_arrays(m[:-1],w)
+plt.plot(logm,logw)
+plt.show()
+
+'''
+		#Look for Pareto Distribution
+		logM, logW = log_arrays(m,w)	
+		
+			
+		SI = 0 #Start Index
+
+		coeff = polyfit(logM[SI:],logW[SI:],1)
+		print "power for line for $\\alpha = %.1f$: %f" % (0.5*(i+1),coeff[0])
+		Tail = coeff[0]*logM[SI:] + coeff[1]
+		
+		plt.figure()
+		plt.title("Pareto power %s" % f)
+		plt.plot(logM[SI:],logW[SI:],".",markersize=0.8,label="$\\alpha = %s$" % 0.5*(i+1))
+		plt.plot(logM[SI:],Tail,label="tail")
+		plt.legend()
+		plt.axis([-1,2,-5,0.5])
+		plt.xlabel("$\log_{10}(m)$") ; plt.ylabel("$\log_{10}(w)$")
+
+		#Look for Gibbs Distribution
+		GSI = 0 ; GEI = 999	
+		
+		nlogM, nlogW = nlog_arrays(M[i][GSI:GEI],W[i][GSI:GEI]) ; m = exp(nlogM)
+		
+		Gcoeff = polyfit(m,nlogW,1)
+		print "Gibbs slope for line %d : %f" % (i,Gcoeff[0])
+		GTail = Gcoeff[0]*m + Gcoeff[1]
+		
+		plt.figure()
+		plt.title("Gibbs slope %s" % f)
+		plt.plot(m,nlogW,".",markersize = 0.8)
+		plt.plot(m,GTail,label="Gtail")
+		plt.legend()
+		plt.xlabel("m") ; plt.ylabel("$\log(w)$")
+		
+	
+
+	plt.figure()
+	for i in range(5):
+		logM, logW = log_arrays(M[i],W[i])
+		plt.plot(logM,logW,".",markersize=0.8,label="%d" % i)
+	plt.legend()
+	plt.axis([-1,2,-5,0.5])
+	plt.show()
+'''
