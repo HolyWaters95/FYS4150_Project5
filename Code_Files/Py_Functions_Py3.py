@@ -168,6 +168,16 @@ def nlog_arrays(M,W):
 			logM.append(log(M[i]))
 			logW.append(log(W[i]))
 	return array(logM), array(logW)
+
+
+def non_zeros_array(M,W):
+	logM = [] ; logW = []
+	for i in range(len(M)):
+		if (W[i] != 0.0):
+			logM.append(M[i])
+			logW.append(W[i])
+	return array(logM), array(logW)
+
 """
 def extract_parametres_d(filename):
 	f = filename.split("/")[2]

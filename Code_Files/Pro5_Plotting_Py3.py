@@ -1,4 +1,4 @@
-from Py_Functions_Py3 import readarrays, plot_median_c, nlog_arrays, plot_prob_distribution_c, log_arrays, f, plot_loglogW
+from Py_Functions_Py3 import readarrays, plot_median_c, nlog_arrays, plot_prob_distribution_c, log_arrays, f, non_zeros_array
 import Py_Functions_Py3 as pf
 from numpy import array, zeros, linspace, log, log10, exp, sort, polyfit, polyval
 from matplotlib.pyplot import *
@@ -22,7 +22,7 @@ if abc == "a":
 	title("Histogram of 'amount of money' as function of $m$")
 	xlabel("Amount of money")
 	ylabel("$w_m$")
-	savefig("../Plots/Plots_a_b_c/a_histogram.png")
+	savefig("../Plots/Plots_a_b_c/a_histogram.png", dpi=300)
 	show()
 
 
@@ -40,17 +40,17 @@ if abc == "b":
 	w, m_intervals, patches = hist(Money,len(N),density=True)
 	close(fig)
 
-	p = m_intervals[:-1]
-	p, w = nlog_arrays(p, w)
-	x,y = polyfit(exp(p[:-250]),w[:-250],1)
+	m = m_intervals[:-1]
+	p, w = nlog_arrays(m, w)
+	x, y = polyfit(exp(p[:-70]),w[:-70],1)
 
 	plot(exp(p),w)
 	plot(exp(p), x*exp(p)+y, label = "Slope = {0:f}%".format(x))
 	title("Equilibrium, $w_m$, as function of $m$")
-	xlabel("Amount of money")
+	xlabel("Wealth m (m_0 = 1)")
 	ylabel("$log(w_m)$")
 	legend()
-	savefig("../Plots/Plots_a_b_c/b_logplot.png")
+	savefig("../Plots/Plots_a_b_c/b_logplot.png", dpi=300)
 	show()
 
 
@@ -76,53 +76,86 @@ if abc == "c":
 	#	plot_median_c(f)
 
 
-
 	# Distribution
 	N = range(1,501)
-	D = 5
-	Money = []
+	Money1 = []
 	filenames = []
 	filestart = "../Results_O/OE_c_Money_distributions_D_5_N_500"
 	Lvalues = ["0.250000", "0.500000", "0.900000"]
 	for L in Lvalues:
 		filenames.append(filestart + "_L_" + L + "_0" + ".txt")
 	for R in range(len(Lvalues)):
-		Money = []
+		Money1 = []
 		M_R = readarrays("%s" % filenames[R])[0]
 		for i in range(0,len(M_R)):
-			Money += list(M_R[i])
+			Money1 += list(M_R[i])
 
 		# Three plots of lambda and histograms
 		figure()
-		w, m_intervals, patches = hist(Money,len(N),density=True)
+		w, m_intervals, patches = hist(Money1,len(N),density=True)
 		plot(m_intervals, f(Lvalues[R],m_intervals), label = "$\lambda = {0}$".format(Lvalues[R]))
 		title("Money distributions for different $\lambda$")
-		xlabel("$m/<m>$")
+		xlabel("Wealth m $(m_0 = 1)$")
 		ylabel("$P(m)$")
 		legend()
-		savefig("../Plots/Plots_a_b_c/c_money_dist_hist" + "_L_" + Lvalues[R] + ".png")
+		savefig("../Plots/Plots_a_b_c/c_money_dist_hist" + "_L_" + Lvalues[R] + ".png", dpi=300)
 		show()
 
 	# All lambdas in the same plot
 	for i in range(len(Lvalues)):
 		plot(m_intervals, f(Lvalues[i],m_intervals), label = "$\lambda = {0}$".format(Lvalues[i]))
 	title("Money distributions for different $\lambda$")
-	xlabel("$m/<m>$")
-	ylabel("$P(m)$")
+	xlabel("Wealth m $(m_0 = 1)$")
+	ylabel("Percent of total participants $P(m)$")
 	legend()
-	savefig("../Plots/Plots_a_b_c/c_money_dist_L_123.png")
+	savefig("../Plots/Plots_a_b_c/c_money_dist_L_123.png", dpi=300)
 	show()
 
 
-	# loglog plot
+	# loglog plot, P(m) vs m
+	for i in range(len(Lvalues)):
+		plot(log(m_intervals), f(Lvalues[i],m_intervals), label = "$\lambda = {0}$".format(Lvalues[i]))
+	title("Loglog plot of money distributions for different $\lambda$")
+	xlabel("log(Wealth m $(m_0 = 1))$")
+	ylabel("$log(P(m))$")
+	yscale("log")
+	legend()
+	savefig("../Plots/Plots_a_b_c/c_money_dist_L_123_loglog.png", dpi=300)
+	show()
 
+
+	# plotting tail end
+	Money2 = []
+	filenames = []
+	filestart = "../Results_O/OE_c_Money_distributions_D_5_N_500"
+	Lvalues = ["0.250000"]
+	for L in Lvalues:
+		filenames.append(filestart + "_L_" + L + "_0" + ".txt")
 	for R in range(len(Lvalues)):
-		plot_loglogW(m_intervals, w, filenames)
+		Money2 = []
+		M_R = readarrays("%s" % filenames[R])[0]
+		for i in range(0,len(M_R)):
+			Money2 += list(M_R[i])
 
+		fig = figure()
+		w, m_intervals2, patches = hist(Money2,len(N),density=True)
+		close(fig)
+		m2 = m_intervals2[:-1]
+		p2, w = nlog_arrays(m2, w)
+		x2, y2 = polyfit(exp(p2[100:-50]),w[100:-50],1)
 
+		plot(exp(p2[100:-50]),w[100:-50])
+		plot(exp(p2[100:-50]), x2*exp(p2[100:-50])+y2, label = "Slope = {0:f}%".format(x2))
 
+		#plot(p2, f(Lvalues[R],p2), label = "$\lambda = {0}$".format(Lvalues[R]))
+		title("Equilibrium, $w_m$, as function of $m$")
+		xlabel("Wealth m (m_0 = 1)")
+		ylabel("$log(w_m)$")
+		legend()
+		savefig("../Plots/Plots_a_b_c/c_money_dist_L_123_tail.png", dpi=300)
+		show()
 
-
+		#plot(m_intervals, f(Lvalues[R],m_intervals), label = "$\lambda = {0}$".format(Lvalues[R]))
 
 
 
