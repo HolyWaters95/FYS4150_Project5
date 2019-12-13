@@ -10,8 +10,8 @@ import scipy.stats as stats
 """
 task a)
 """
-abc = input("Which task would you like to run)? a/b/c \n")
-if abc == "a":
+abc = input("Which task would you like to run? a/b/c \n")
+if (abc == "a"):
 	N = range(1,501)
 	Money = []
 	M_R = readarrays("../Results_O/OE_a_Money_distributions_D_5_N_500_0.txt")[0]
@@ -90,21 +90,33 @@ if abc == "c":
 		for i in range(0,len(M_R)):
 			Money1 += list(M_R[i])
 
-		# Three plots of lambda and histograms
+		# Three seperate plots of lambda superimposed on histograms
 		figure()
 		w, m_intervals, patches = hist(Money1,len(N),density=True)
-		plot(m_intervals, f(Lvalues[R],m_intervals), label = "$\lambda = {0}$".format(Lvalues[R]))
-		title("Money distributions for different $\lambda$")
+		plot(m_intervals, f(Lvalues[R],m_intervals), label = "$\lambda = ${0:.2f}".format(float(Lvalues[R])))
+		title("Distribution of wealth for different $\lambda$")
 		xlabel("Wealth m $(m_0 = 1)$")
 		ylabel("$P(m)$")
 		legend()
 		savefig("../Plots/Plots_a_b_c/c_money_dist_hist" + "_L_" + Lvalues[R] + ".png", dpi=300)
 		show()
 
+
 	# All lambdas in the same plot
+	# Lambda = 0
+	N = range(1,501)
+	MoneyL0 = []
+	M_R = readarrays("../Results_O/OE_a_Money_distributions_D_5_N_500_0.txt")[0]
+	for i in range(0,len(M_R)):
+		MoneyL0 += list(M_R[i])
+	fig = figure()
+	wL0, m_intervalsL0, patches = hist(MoneyL0,len(N),density=True)
+	close(fig)
+	plot(m_intervalsL0[13:-418], wL0[13:-417], label = "$\lambda = 0$")
+	# Lambda = 0.25, 0.5, 0.9
 	for i in range(len(Lvalues)):
-		plot(m_intervals, f(Lvalues[i],m_intervals), label = "$\lambda = {0}$".format(Lvalues[i]))
-	title("Money distributions for different $\lambda$")
+		plot(m_intervals, f(Lvalues[i],m_intervals), label = "$\lambda = ${0:.2f}".format(float(Lvalues[i])))
+	title("Distribution of wealth for different $\lambda$")
 	xlabel("Wealth m $(m_0 = 1)$")
 	ylabel("Percent of total participants $P(m)$")
 	legend()
@@ -112,10 +124,21 @@ if abc == "c":
 	show()
 
 
-	# loglog plot, P(m) vs m
+	# loglog plot
+	# Lambda = 0
+	N = range(1,501)
+	MoneyL0 = []
+	M_R = readarrays("../Results_O/OE_a_Money_distributions_D_5_N_500_0.txt")[0]
+	for i in range(0,len(M_R)):
+		MoneyL0 += list(M_R[i])
+	fig = figure()
+	wL0, m_intervalsL0, patches = hist(MoneyL0,len(N),density=True)
+	close(fig)
+	plot(log(m_intervalsL0[13:-418]), wL0[13:-417], label = "$\lambda = 0$")
+	# Lambda = 0.25, 0.5, 0.9
 	for i in range(len(Lvalues)):
-		plot(log(m_intervals), f(Lvalues[i],m_intervals), label = "$\lambda = {0}$".format(Lvalues[i]))
-	title("Loglog plot of money distributions for different $\lambda$")
+		plot(log(m_intervals), f(Lvalues[i],m_intervals), label = "$\lambda = ${0:.2f}".format(float(Lvalues[i])))
+	title("Loglog plot of Distribution of wealth for different $\lambda$")
 	xlabel("log(Wealth m $(m_0 = 1))$")
 	ylabel("$log(P(m))$")
 	yscale("log")
@@ -125,6 +148,7 @@ if abc == "c":
 
 
 	# plotting tail end
+	N = range(1,501)
 	Money2 = []
 	filenames = []
 	filestart = "../Results_O/OE_c_Money_distributions_D_5_N_500"
@@ -142,13 +166,16 @@ if abc == "c":
 		close(fig)
 		m2 = m_intervals2[:-1]
 		p2, w = nlog_arrays(m2, w)
-		x2, y2 = polyfit(exp(p2[100:-50]),w[100:-50],1)
+		x2, y2 = polyfit(exp(p2[70:-40]),w[70:-40],1)
 
-		plot(exp(p2[100:-50]),w[100:-50])
-		plot(exp(p2[100:-50]), x2*exp(p2[100:-50])+y2, label = "Slope = {0:f}%".format(x2))
+		"""
+		Skal vel gjøre noe annet enn å polyfitte?
+		"""
+		plot(exp(p2[100:-40]),w[100:-40])
+		plot(exp(p2[100:-40]), x2*exp(p2[100:-40])+y2, label = "Slope = {0:.3f}".format(x2))
 
 		#plot(p2, f(Lvalues[R],p2), label = "$\lambda = {0}$".format(Lvalues[R]))
-		title("Equilibrium, $w_m$, as function of $m$")
+		title("Tail end of distribution of wealth")
 		xlabel("Wealth m (m_0 = 1)")
 		ylabel("$log(w_m)$")
 		legend()
