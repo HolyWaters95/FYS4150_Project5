@@ -106,16 +106,16 @@ def plot_median_c(filename):
 	plot(N,median,'.',N,median,'r')
 	xlabel("$\log_{10}(MC)$")
 	ylabel("$\mu_{1/2}$")
-	savefig("../Plots/Plots_a_b_c/" + filename + ".png")
+	savefig("../Plots/Plots_a_b_c/" + filename + ".png", dpi=300)
 	show()
 	close()
 
 
-def f(L,x):
+def P(L,x):
 	n = 1 + 3*float(L) / (1-float(L))
 	a = n**n / gamma(n)
-	P = a * x**(n-1) * exp(-n * x)
-	return P
+	p = a * x**(n-1) * exp(-n * x)
+	return p
 
 
 def plot_prob_distribution_c(filename,save=False):

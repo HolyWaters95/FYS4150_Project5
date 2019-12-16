@@ -1,4 +1,4 @@
-from Py_Functions_Py3 import readarrays, plot_median_c, nlog_arrays, plot_prob_distribution_c, log_arrays, f, non_zeros_array
+from Py_Functions_Py3 import readarrays, plot_median_c, nlog_arrays, plot_prob_distribution_c, log_arrays, P, non_zeros_array
 import Py_Functions_Py3 as pf
 from numpy import array, zeros, linspace, log, log10, exp, sort, polyfit, polyval
 from matplotlib.pyplot import *
@@ -18,10 +18,12 @@ if (abc == "a"):
 	for i in range(0,len(M_R)):
 		Money += list(M_R[i])
 
-	w, m_intervals, patches = hist(Money,len(N),density=True)
-	title("Histogram of 'amount of money' as function of $m$")
-	xlabel("Amount of money")
+	w, m_intervals, patches = hist(Money,len(N)*2,density=True, label="Numerical")
+	plot(m_intervals, exp(-m_intervals), label = "Analytical", linewidth = 0.9)
+	title("Wealth distribution with $N$ = 500")
+	xlabel("Wealth m ")
 	ylabel("$w_m$")
+	legend()
 	savefig("../Plots/Plots_a_b_c/a_histogram.png", dpi=300)
 	show()
 
@@ -42,10 +44,10 @@ if abc == "b":
 
 	m = m_intervals[:-1]
 	p, w = nlog_arrays(m, w)
-	x, y = polyfit(exp(p[:-70]),w[:-70],1)
+	x, y = polyfit(exp(p[:-60]),w[:-60],1)
 
 	plot(exp(p),w)
-	plot(exp(p), x*exp(p)+y, label = "Slope = {0:f}%".format(x))
+	plot(exp(p), x*exp(p)+y, label = "Slope = {0:.4}".format(x))
 	title("Equilibrium, $w_m$, as function of $m$")
 	xlabel("Wealth m (m_0 = 1)")
 	ylabel("$log(w_m)$")
@@ -62,7 +64,7 @@ if abc == "b":
 task c
 """
 if abc == "c":
-
+	"""
 	# Medianer
 	D = 5
 	filenames = []
@@ -72,50 +74,51 @@ if abc == "c":
 	for L in Lvalues:
 		filenames.append(filestart + "_N_" + Nvalues[0] + "_L_" + L + ".txt")
 
-	#for f in filenames:
-	#	plot_median_c(f)
+	for f in filenames:
+		plot_median_c(f)
 
 
 	# Distribution
 	N = range(1,501)
-	Money1 = []
+	Money = []
 	filenames = []
 	filestart = "../Results_O/OE_c_Money_distributions_D_5_N_500"
 	Lvalues = ["0.250000", "0.500000", "0.900000"]
 	for L in Lvalues:
 		filenames.append(filestart + "_L_" + L + "_0" + ".txt")
 	for R in range(len(Lvalues)):
-		Money1 = []
+		Money = []
 		M_R = readarrays("%s" % filenames[R])[0]
 		for i in range(0,len(M_R)):
-			Money1 += list(M_R[i])
+			Money += list(M_R[i])
 
 		# Three seperate plots of lambda superimposed on histograms
 		figure()
-		w, m_intervals, patches = hist(Money1,len(N),density=True)
-		plot(m_intervals, f(Lvalues[R],m_intervals), label = "$\lambda = ${0:.2f}".format(float(Lvalues[R])))
-		title("Distribution of wealth for different $\lambda$")
+		w, m_intervals, patches = hist(Money,len(N),density=True, label="Numerical")
+		plot(m_intervals, P(Lvalues[R],m_intervals), label = "Analytical")
+		title("Distribution of wealth for $\lambda = ${0:.2f}".format(float(Lvalues[R])))
 		xlabel("Wealth m $(m_0 = 1)$")
 		ylabel("$P(m)$")
 		legend()
 		savefig("../Plots/Plots_a_b_c/c_money_dist_hist" + "_L_" + Lvalues[R] + ".png", dpi=300)
 		show()
+		close()
 
 
 	# All lambdas in the same plot
-	# Lambda = 0
+	# Analytical lambda = 0
 	N = range(1,501)
-	MoneyL0 = []
+	Money1 = []
 	M_R = readarrays("../Results_O/OE_a_Money_distributions_D_5_N_500_0.txt")[0]
 	for i in range(0,len(M_R)):
-		MoneyL0 += list(M_R[i])
+		Money1 += list(M_R[i])
 	fig = figure()
-	wL0, m_intervalsL0, patches = hist(MoneyL0,len(N),density=True)
+	un_used, m_intervals0, patches = hist(Money1,len(N),density=True, label="Numerical")
 	close(fig)
-	plot(m_intervalsL0[13:-418], wL0[13:-417], label = "$\lambda = 0$")
-	# Lambda = 0.25, 0.5, 0.9
+	plot(m_intervals0[14:-417], exp(-m_intervals0[14:-417]), label = "Analytical $\lambda = 0$")
+	# Analytical Lambda = 0.25, 0.5, 0.9
 	for i in range(len(Lvalues)):
-		plot(m_intervals, f(Lvalues[i],m_intervals), label = "$\lambda = ${0:.2f}".format(float(Lvalues[i])))
+		plot(m_intervals, P(Lvalues[i],m_intervals), label = "Analytical $\lambda = ${0:.2f}".format(float(Lvalues[i])))
 	title("Distribution of wealth for different $\lambda$")
 	xlabel("Wealth m $(m_0 = 1)$")
 	ylabel("Percent of total participants $P(m)$")
@@ -124,20 +127,12 @@ if abc == "c":
 	show()
 
 
-	# loglog plot
+	# loglog plot of all lambda
 	# Lambda = 0
-	N = range(1,501)
-	MoneyL0 = []
-	M_R = readarrays("../Results_O/OE_a_Money_distributions_D_5_N_500_0.txt")[0]
-	for i in range(0,len(M_R)):
-		MoneyL0 += list(M_R[i])
-	fig = figure()
-	wL0, m_intervalsL0, patches = hist(MoneyL0,len(N),density=True)
-	close(fig)
-	plot(log(m_intervalsL0[13:-418]), wL0[13:-417], label = "$\lambda = 0$")
+	plot(log(m_intervals), exp(-m_intervals), label = "Analytical $\lambda = 0$")
 	# Lambda = 0.25, 0.5, 0.9
 	for i in range(len(Lvalues)):
-		plot(log(m_intervals), f(Lvalues[i],m_intervals), label = "$\lambda = ${0:.2f}".format(float(Lvalues[i])))
+		plot(log(m_intervals), P(Lvalues[i],m_intervals), label = "Analytical $\lambda = ${0:.2f}".format(float(Lvalues[i])))
 	title("Loglog plot of Distribution of wealth for different $\lambda$")
 	xlabel("log(Wealth m $(m_0 = 1))$")
 	ylabel("$log(P(m))$")
@@ -145,14 +140,13 @@ if abc == "c":
 	legend()
 	savefig("../Plots/Plots_a_b_c/c_money_dist_L_123_loglog.png", dpi=300)
 	show()
+	"""
 
-
-	# plotting tail end
+	# plotting tail end for each lambda
 	N = range(1,501)
-	Money2 = []
 	filenames = []
 	filestart = "../Results_O/OE_c_Money_distributions_D_5_N_500"
-	Lvalues = ["0.250000"]
+	Lvalues = ["0.250000", "0.500000", "0.900000"]
 	for L in Lvalues:
 		filenames.append(filestart + "_L_" + L + "_0" + ".txt")
 	for R in range(len(Lvalues)):
@@ -160,196 +154,47 @@ if abc == "c":
 		M_R = readarrays("%s" % filenames[R])[0]
 		for i in range(0,len(M_R)):
 			Money2 += list(M_R[i])
-
 		fig = figure()
-		w, m_intervals2, patches = hist(Money2,len(N),density=True)
+		ww, m_intervals2, patches = hist(Money2,len(N),density=True)
 		close(fig)
 		m2 = m_intervals2[:-1]
-		p2, w = nlog_arrays(m2, w)
-		x2, y2 = polyfit(exp(p2[70:-40]),w[70:-40],1)
+		p2, www = nlog_arrays(m2, ww)
 
-		"""
-		Skal vel gjøre noe annet enn å polyfitte?
-		"""
-		plot(exp(p2[100:-40]),w[100:-40])
-		plot(exp(p2[100:-40]), x2*exp(p2[100:-40])+y2, label = "Slope = {0:.3f}".format(x2))
-
-		#plot(p2, f(Lvalues[R],p2), label = "$\lambda = {0}$".format(Lvalues[R]))
-		title("Tail end of distribution of wealth")
-		xlabel("Wealth m (m_0 = 1)")
-		ylabel("$log(w_m)$")
-		legend()
-		savefig("../Plots/Plots_a_b_c/c_money_dist_L_123_tail.png", dpi=300)
-		show()
-
-		#plot(m_intervals, f(Lvalues[R],m_intervals), label = "$\lambda = {0}$".format(Lvalues[R]))
-
-
-
-
-
-
-
-'''
-coeff = polyfit(m_intervals[:-1],w,10)
-W = polyval(coeff,m_intervals[:-1])
-plt.plot(m_intervals[:-1],W,'r')
-
-fit_alpha, fit_loc, fit_beta=stats.gamma.fit(w)
-
-plt.plot()
-'''
-
-
-
-'''
-
-
-lw = zeros(len(w))
-for i in range(len(lw)):
-	if w[i] != 0:
-		lw[i] = log(w[i])
-	else:
-		lw[i] = w[i]
-
-plt.figure()
-plt.plot(log10(m_intervals[:-1]),log10(w))
-#plt.savefig("log_w_a.png")
-
-slope = (lw[100]-lw[1])/(m_intervals[100]-lw[1])
-print slope
-
-plt.show()
-
-
-'''
-
-
-
-
-
-avalues = ["0.500000", "1.000000", "1.500000", "2.000000"]
-gvalues = ["1.000000", "2.000000", "3.000000", "4.000000"]
-'''
-#task a
-filenames.append(filestart + "_N_" + Nvalues[0] + ".txt")
-
-#task c
-for L in Lvalues:
-	filenames.append(filestart + "_N_" + Nvalues[0] + "_L_" + L + ".txt")
-'''
-
-'''
-#task e
-for L in ["0.000000","0.500000"]:
-	for a in ["1.000000","2.000000"]:
-		for g in gvalues:
-			filenames.append(filestart + "_N_" + Nvalues[1] + "_L_" + L + "_a_" + a + "_g_" + g + ".txt")
-
-'''
-"""
-yn = input("Do you want to plot medians for task d)? y/n \n")
-if yn == "y":
-	filenames = []
-	D = input("Exponent of D? \n")
-	filestart = "../Results/Median_D_%s" % D
-	for N in Nvalues:
-		for L in ["0.000000","0.500000"]:
-			for a in avalues:
-				filenames.append(filestart + "_N_" + N + "_L_" + L + "_a_" + a + ".txt")
-
-	for f in filenames:
-		plot_median_d(f,save=False)
-
-yn = input("Do you want to plot probability distributions for d)? y/n \n")
-if yn == "y":
-	filenames = []
-	D = input("Exponent of D? \n")
-	filestart = "../Results/Money_distributions_D_%s" % D
-	for N in Nvalues:
-		for L in ["0.000000","0.500000"]:
-			for a in avalues:
-				filenames.append(filestart + "_N_" + N + "_L_" + L + "_a_" + a + ".txt")
-				#if N == "1000" and L == "0.000000" and a == "2.000000":
-				#	filenames.append(filestart + "_N_" + N + "_L_" + L + "_a_" + "9.000000" + ".txt")
-
-
-	W = [] ; M = []
-	for i in range(len(filenames)):
-		f = filenames[i]
-		w, m = plot_prob_distribution_d(f,save=False)
-		W.append(w) ; M.append(m[:-1])
-
-	i = 0
-	while i < len(W):
-
-		pf.plot_loglogW(M[i:i+4],W[i:i+4],filenames[i:i+4],save=True)
-		pf.Pareto_dist_d(M[i:i+4],W[i:i+4],filenames[i:i+4],save=True)
-		pf.Gibbs_dist_d(M[i:i+4],W[i:i+4],filenames[i:i+4],save=True)
-		i += 4
-
-yn = input("Do you want to plot medians for task e)? y/n \n")
-if yn == "y":
-	filenames = []
-	D = input("Exponent of D? \n")
-	filestart = "../Results/Median_D_%s_N_1000" % D
-	for L in ["0.000000","0.500000"]:
-		for a in ["1.000000","2.000000"]:
-			for g in gvalues:
-				filenames.append(filestart + "_L_" + L + "_a_" + a + "_g_" + g + ".txt")
-	filenames.append("../Results/Median_D_8_N_1000_L_0.500000_a_2.000000_g_1.000000.txt")
-	#for f in filenames:
-	#	pf.plot_median_e(f,save=True)
-	pf.plot_median_e(filenames[-1],save=True)
-
-w,m = plot_prob_distribution_d("../Results/Money_distributions_D_7_N_1000_L_0.000000_a_2.000000_g_2.000000.txt")
-
-logm, logw = log_arrays(m[:-1],w)
-plot(logm,logw)
-show()
-"""
-'''
-		#Look for Pareto Distribution
-		logM, logW = log_arrays(m,w)
-
-
-		SI = 0 #Start Index
-
-		coeff = polyfit(logM[SI:],logW[SI:],1)
-		print "power for line for $\\alpha = %.1f$: %f" % (0.5*(i+1),coeff[0])
-		Tail = coeff[0]*logM[SI:] + coeff[1]
-
-		plt.figure()
-		plt.title("Pareto power %s" % f)
-		plt.plot(logM[SI:],logW[SI:],".",markersize=0.8,label="$\\alpha = %s$" % 0.5*(i+1))
-		plt.plot(logM[SI:],Tail,label="tail")
-		plt.legend()
-		plt.axis([-1,2,-5,0.5])
-		plt.xlabel("$\log_{10}(m)$") ; plt.ylabel("$\log_{10}(w)$")
-
-		#Look for Gibbs Distribution
-		GSI = 0 ; GEI = 999
-
-		nlogM, nlogW = nlog_arrays(M[i][GSI:GEI],W[i][GSI:GEI]) ; m = exp(nlogM)
-
-		Gcoeff = polyfit(m,nlogW,1)
-		print "Gibbs slope for line %d : %f" % (i,Gcoeff[0])
-		GTail = Gcoeff[0]*m + Gcoeff[1]
-
-		plt.figure()
-		plt.title("Gibbs slope %s" % f)
-		plt.plot(m,nlogW,".",markersize = 0.8)
-		plt.plot(m,GTail,label="Gtail")
-		plt.legend()
-		plt.xlabel("m") ; plt.ylabel("$\log(w)$")
-
-
-
-	plt.figure()
-	for i in range(5):
-		logM, logW = log_arrays(M[i],W[i])
-		plt.plot(logM,logW,".",markersize=0.8,label="%d" % i)
-	plt.legend()
-	plt.axis([-1,2,-5,0.5])
-	plt.show()
-'''
+		start = (150, 200, 300)
+		stop = (-40, -40, -10)
+		# tail for lambda = 0.25 with fitting
+		if R == 0:
+			x1, y1 = polyfit(exp(p2[start[0]:stop[0]]),www[start[0]:stop[0]],1)
+			plot(exp(p2[start[0]:stop[0]]),www[start[0]:stop[0]])
+			plot(exp(p2[start[0]:stop[0]]), x1*exp(p2[start[0]:stop[0]])+y1, label = "Slope = {0:.3f}".format(float(x1)))
+			title("Tail end of distribution of wealth $\lambda$ = {0:.2f}".format(float(Lvalues[0])))
+			xlabel("Wealth m (m_0 = 1)")
+			ylabel("$log(w_m)$")
+			legend()
+			axis(0,-10,1,6)
+			savefig("../Plots/Plots_a_b_c/c_money_dist_L_" + Lvalues[0] + "_tail.png", dpi=300)
+			show()
+		# tail for lambda = 0.50 with fitting
+		if R == 1:
+			x2, y2 = polyfit(exp(p2[start[1]:stop[1]]),www[start[1]:stop[1]],1)
+			plot(exp(p2[start[1]:stop[1]]),www[start[1]:stop[1]])
+			plot(exp(p2[start[1]:stop[1]]), x2*exp(p2[start[1]:stop[1]])+y2, label = "Slope = {0:.3f}".format(float(x2)))
+			title("Tail end of distribution of wealth $\lambda$ = {0:.2f}".format(float(Lvalues[1])))
+			xlabel("Wealth m (m_0 = 1)")
+			ylabel("$log(w_m)$")
+			legend()
+			axis(0,-10,1,6)
+			savefig("../Plots/Plots_a_b_c/c_money_dist_L_" + Lvalues[1] + "_tail.png", dpi=300)
+			show()
+		# tail for lambda = 0.90 with fitting
+		if R == 2:
+			x3, y3 = polyfit(exp(p2[start[2]:stop[2]]),www[start[2]:stop[2]],1)
+			plot(exp(p2[start[2]:stop[2]]),www[start[2]:stop[2]])
+			plot(exp(p2[start[2]:stop[2]]), x3*exp(p2[start[2]:stop[2]])+y3, label = "Slope = {0:.3f}".format(float(x3)))
+			title("Tail end of distribution of wealth $\lambda$ = {0:.2f}".format(float(Lvalues[2])))
+			xlabel("Wealth m (m_0 = 1)")
+			ylabel("$log(w_m)$")
+			legend()
+			axis(0,-10,1,6)
+			savefig("../Plots/Plots_a_b_c/c_money_dist_L_" + Lvalues[2] + "_tail.png", dpi=300)
+			show()
