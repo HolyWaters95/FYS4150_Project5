@@ -59,7 +59,7 @@ void transaction_taxes(int i, int j, double t, vec& M){
     return;
 } // end of transaction_taxes
 
-vector<int> Sampling_Rule(vec M, mat& c, double alpha = 0, double gamma = 0){
+vector<int> Sampling_Rule(vec M, mat& c, vec& A, mat& D, double alpha = 0, double gamma = 0){
     mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
     vector<int> index = vector<int>{0, 0};
     int N = M.n_elem;
@@ -69,21 +69,39 @@ vector<int> Sampling_Rule(vec M, mat& c, double alpha = 0, double gamma = 0){
 
     double P = 0;
     double r = 0;
+    double delta_m = 0;
+
+    double S1 = 0; double S2 = 0;
 
     while (i1 == i2 or confirm == 0){
     confirm = 0;
     i1 = static_cast<int>( (generate_canonical< double, 128 > (rng))*static_cast<double>(N) );
     i2 = static_cast<int>( (generate_canonical< double, 128 > (rng))*static_cast<double>(N) );
-    P = pow(abs(M(i1) - M(i2)), -alpha) * pow(c(i1,i2)+1,gamma);
+    delta_m = abs(M(i1) - M(i2));
+    if (delta_m < EPS){
+        P = 1.0;
+    }
+    else{
+        S1 = accu(D.col(i1));
+        S2 = accu(D.col(i2));
+        P = 2*pow(delta_m, -alpha)/(S1+S2);// * 2*pow(c(i1,i2)+1,gamma)/(A(i1)+A(i2));
+
+    }
     r = generate_canonical< double, 128 > (rng);
 
-    if (r < P or abs(M(i1)-M(i2)) < EPS){
+    if (r < P){
         confirm = 1;
     } //end if
-
+    //cout << i1 << "  " << i2 << "   " << S1 << " " << S2 << endl;
+    //cout << delta_m << "   " << P << "   " << r << "   " << "   " << confirm << endl;
     } //end while
     index[0] = i1 ; index[1] = i2;
+    A(i1) = A(i1) - pow(c(i1,i2)+1,gamma); A(i2) = A(i2) - pow(c(i1,i2)+1,gamma);
+
     c(i1,i2) += 1;
+    c(i2,i1) += 1;
+    A(i1) = A(i1) + pow(c(i1,i2)+1,gamma); A(i2) = A(i2) + pow(c(i1,i2)+1,gamma);
+
     return index;
 } // end function Sampling_Rule
 
@@ -91,7 +109,7 @@ void Financial_analysis(int Ex, int Cycles, int N, string file1, string file2, d
     mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
     int m0 = 1;
     vec M;
-
+    mat D;
     vec m = m_vector(0,N*m0,(N*m0)/500);
 
     int thread_id;
@@ -99,7 +117,7 @@ void Financial_analysis(int Ex, int Cycles, int N, string file1, string file2, d
     string filename1;
     string filename2 = "../Results/" + file2 + ".txt";
 
-    #pragma omp parallel private(thread_id, counter,filename1, M)
+    #pragma omp parallel private(thread_id, counter,filename1, M,D)
     {
     thread_id = omp_get_thread_num();
     counter = 0;
@@ -109,13 +127,25 @@ void Financial_analysis(int Ex, int Cycles, int N, string file1, string file2, d
     for (int i = 0;i<Ex;i++){
         M = m0*vec(N,fill::ones);
         mat c = mat(M.n_elem,M.n_elem,fill::zeros);
+        vec A = vec(N,fill::zeros); D = mat(N,N,fill::zeros);
+        for (int aa = 0;aa<N;aa++){
+            A(aa) = N - 1;
+        }
+
         // Start MC loop
         for (int j = 0; j<Cycles;j++){
 
+            //if (thread_id == 0 and j % 1000 == 0){cout << "experiment " << i << "  cycle " << j << endl;}
 
-            vector<int> index = Sampling_Rule(M,c,alpha,gamma);
-
+            vector<int> index = Sampling_Rule(M,c,A,D,alpha,gamma);
+            //cout << "passed sampling rule \n";
             transaction(index[0],index[1],lambda,M);
+
+            for (int k = 0;k<N;k++){
+                D(index[0],k) = pow(abs(M(index[0])-M(k)),-alpha); D(k,index[0]) = D(index[0],k);
+                D(index[1],k) = pow(abs(M(index[1])-M(k)),-alpha); D(k,index[1]) = D(index[1],k);
+            }
+            D(index[0],index[0]) = 0; D(index[1],index[1]) = 0;
 
             if(thread_id==0 and counter==0){
                 if(j == 0){
@@ -171,6 +201,104 @@ void Financial_analysis(int Ex, int Cycles, int N, string file1, string file2, d
     return;
 } // end of function Financial_analysis
 
+void Financial_analysis_e(int Ex, int Cycles, int N, string file1, string file2, double lambda = 0, double alpha = 0, double gamma = 0){
+    mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
+    int m0 = 1;
+    vec M;
+
+    vec m = m_vector(0,N*m0,(N*m0)/500);
+
+    int thread_id;
+    int counter;
+    string filename1;
+    string filename2 = "../Results/" + file2 + ".txt";
+
+    #pragma omp parallel private(thread_id, counter,filename1, M)
+    {
+    thread_id = omp_get_thread_num();
+    counter = 0;
+    filename1 = "../Results/" + file1 + "_" + to_string(thread_id) + ".txt";
+    #pragma omp for
+    // Start Experiment loop
+    for (int i = 0;i<Ex;i++){
+        M = m0*vec(N,fill::ones);
+        mat c = mat(M.n_elem,M.n_elem,fill::zeros);
+        vec A = vec(N,fill::zeros); mat D = mat(N,N,fill::zeros);
+        for (int aa = 0;aa<N;aa++){
+            A(aa) = N - 1;
+        }
+        // Start MC loop
+        for (int j = 0; j<Cycles+250000;j++){
+
+
+            vector<int> index = Sampling_Rule(M,c,A,D,alpha,gamma);
+
+            transaction(index[0],index[1],lambda,M);
+
+            for (int k = 0;k<N;k++){
+                D(index[0],k) = pow(abs(M(index[0])-M(k)),-alpha); D(k,index[0]) = D(index[0],k);
+                D(index[1],k) = pow(abs(M(index[1])-M(k)),-alpha); D(k,index[1]) = D(index[1],k);
+            }
+            D(index[0],index[0]) = 0; D(index[1],index[1]) = 0;
+
+            /*if(thread_id==0 and counter==0){
+                if(j == 0){
+                vec M_temp = sort(M);
+                double median = (M_temp(249) + M_temp(250))/2;
+                ofstream output;
+                output.open(filename2,ios::out);
+                output << median << endl;
+                output.close();
+                }
+                else if (j % (Cycles/100) == 0) {
+                vec M_temp = sort(M);
+                double median = (M_temp(249) + M_temp(250))/2;
+                ofstream output;
+                output.open(filename2,ios::app);
+                output << median << endl;
+                output.close();
+                }
+
+            }*/
+
+            //measuring states
+            if(j >= Cycles){
+
+                if(counter == 0){
+                ofstream output;
+                output.open(filename1,ios::out);
+                output << M << endl;
+                output.close();
+                }
+                else if(j % 1000 == 0){
+                ofstream output;
+                output.open(filename1,ios::app);
+                output << M << endl;
+                output.close();
+                }
+                counter += 1;
+            } // end measure loop
+
+        } //end MC loop
+
+        if(thread_id == 0){
+            ofstream output;
+            output.open(filename2,ios::app);
+            output << endl;
+            output.close();
+        }
+
+
+
+
+
+    } //end Experiment loop
+    } //end pragma
+    return;
+} // end of function Financial_analysis_e
+
+
+
 void task_a(int Ex, int Cycles){
     cout << "Task a) \n ------------------" << endl;
     int N = 500;
@@ -224,7 +352,7 @@ void task_d(int Ex, int Cycles){
                      << "a = " << alpha << endl;
                 time_t start, finish;
                 start = clock();
-                Financial_analysis(Ex,Cycles,N,"Money_distributions" + numbers,"Median"+numbers,L, alpha);
+                Financial_analysis_e(Ex,Cycles,N,"Test_Money_distributions" + numbers,"Test_Median"+numbers,L, alpha);
                 finish = clock();
                 cout << "time used by function Financial_analysis: " << (double) (finish-start)/CLOCKS_PER_SEC << " seconds" << endl << endl;
             }
@@ -237,8 +365,8 @@ void task_e(int Ex, int Cycles){
     cout << "Task e) \n ------------------" << endl;
     int D = static_cast<int>(log10(Cycles));
     int N = 1000;
-    vec lambdas = vec("0 0.5");
-    vec alphas = vec("1.0 2.0");
+    vec lambdas = vec("0.0");
+    vec alphas = vec("2.0");
     vec gammas = vec("1.0 2.0 3.0 4.0");
 
     for (uword i = 0;i<lambdas.n_elem;i++){
@@ -255,7 +383,7 @@ void task_e(int Ex, int Cycles){
                      << "g = " << gamma << endl;
                 time_t start, finish;
                 start = clock();
-                Financial_analysis(Ex,Cycles,N,"Money_distributions" + numbers,"Median"+numbers,L, alpha,gamma);
+                Financial_analysis_e(Ex,Cycles,N,"TEST2_Money_distributions" + numbers,"TEST2_Median"+numbers,L, alpha,gamma);
                 finish = clock();
                 cout << "time used by function Financial_analysis: " << (double) (finish-start)/CLOCKS_PER_SEC << " seconds" << endl << endl;
             }
@@ -263,3 +391,5 @@ void task_e(int Ex, int Cycles){
     }
     return;
 } //end of task e
+
+

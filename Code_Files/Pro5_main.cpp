@@ -18,10 +18,12 @@ int main(){
     cout << "Do you want to run tests? y/n \n";
     cin >> Tests;
     if (Tests == "y"){
-        test_sampling();
-        test_stability();
-        test_stability_savings();
-        test_stability_taxes();
+        test_alpha();
+        //test_gamma();
+        //test_sampling();
+        //test_stability();
+        //test_stability_savings();
+        //test_stability_taxes();
     }
 
 
@@ -34,7 +36,7 @@ int main(){
 
 
     //Financial_analysis(Ex,Cycles,1000,"Money_distributions_D_7_N_1000_L_0.000000_a_2.000000_g_2.000000","Median_D_7_N_1000_L_0.000000_a_2.000000_g_2.000000",0,2.0,2.0);
-    task_e(Ex,Cycles);
+    task_d(Ex,Cycles);
 
     /*Median_D_7_N_1000_L_0.000000_a_2.000000_g_1.000000
      * Median_D_7_N_1000_L_0.500000_a_2.000000_g_1.000000

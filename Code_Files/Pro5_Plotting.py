@@ -83,6 +83,8 @@ for L in ["0.000000","0.500000"]:
 
 '''
 
+
+
 yn = raw_input("Do you want to plot medians for task d)? y/n \n")
 if yn == "y":
 	filenames = []
@@ -100,7 +102,7 @@ yn = raw_input("Do you want to plot probability distributions for d)? y/n \n")
 if yn == "y":
 	filenames = []
 	D = raw_input("Exponent of D? \n")
-	filestart = "../Results/Money_distributions_D_%s" % D	
+	filestart = "../Results/Test_Money_distributions_D_%s" % D	
 	for N in Nvalues:
 		for L in ["0.000000","0.500000"]:
 			for a in avalues:
@@ -118,9 +120,9 @@ if yn == "y":
 	i = 0	
 	while i < len(W):
 		
-		pf.plot_loglogW(M[i:i+4],W[i:i+4],filenames[i:i+4],save=True)
-		pf.Pareto_dist_d(M[i:i+4],W[i:i+4],filenames[i:i+4],save=True)
-		pf.Gibbs_dist_d(M[i:i+4],W[i:i+4],filenames[i:i+4],save=True)		
+		pf.plot_loglogW_d(M[i:i+4],W[i:i+4],filenames[i:i+4],save=False)
+		pf.Pareto_dist_d(M[i:i+4],W[i:i+4],filenames[i:i+4],save=False)
+		pf.Gibbs_dist_d(M[i:i+4],W[i:i+4],filenames[i:i+4],save=False)		
 		i += 4
 
 yn = raw_input("Do you want to plot medians for task e)? y/n \n")
@@ -137,12 +139,49 @@ if yn == "y":
 	#	pf.plot_median_e(f,save=True)
 	pf.plot_median_e(filenames[-1],save=True)
 
+'''
+filename = "../Results/Money_distributions_D_7_N_1000_L_0.000000_a_2.000000.txt"
+D, N, L, a = pf.extract_parametres_d(filename)
+print D, N, L, a
+'''
+
+yn = raw_input("Do you want to plot probability distributions for e)? y/n \n")
+if yn == "y":
+	filenames = []
+	D = raw_input("Exponent of D? \n")
+	filestart = "../Results/TEST_Money_distributions_D_%s_N_1000" % D	
+	for L in ["0.000000","0.500000"]:
+		for a in ["1.000000","2.000000"]:
+			for g in gvalues:
+				filenames.append(filestart + "_L_" + L + "_a_" + a + "_g_" + g + ".txt")
+				#if N == "1000" and L == "0.000000" and a == "2.000000":
+				#	filenames.append(filestart + "_N_" + N + "_L_" + L + "_a_" + "9.000000" + ".txt")	
+	
+
+	W = [] ; M = []
+	for i in range(len(filenames)):
+		f = filenames[i]
+		w, m = pf.plot_prob_distribution_e(f,save=False)
+		W.append(w) ; M.append(m[:-1])
+		
+	i = 0	
+	while i < len(W):
+		
+		pf.plot_loglogW_e(M[i:i+4],W[i:i+4],filenames[i:i+4],save=False)
+		pf.Pareto_dist_e(M[i:i+4],W[i:i+4],filenames[i:i+4],save=True)
+		#pf.Gibbs_dist_e(M[i:i+4],W[i:i+4],filenames[i:i+4],save=False)		
+		i += 4
+
+
+
+
+'''
 w,m = plot_prob_distribution_d("../Results/Money_distributions_D_7_N_1000_L_0.000000_a_2.000000_g_2.000000.txt")
 
 logm, logw = log_arrays(m[:-1],w)
 plt.plot(logm,logw)
 plt.show()
-
+'''
 '''
 		#Look for Pareto Distribution
 		logM, logW = log_arrays(m,w)	

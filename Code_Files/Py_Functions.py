@@ -170,8 +170,8 @@ def plot_prob_distribution_d(filename,save=False):
 	if save:
 		Folder = "Plots_d_D_%s/" % D
 		plt.savefig("../Plots/Plots_d/" + Folder + filename + ".png")
-	else:
-		plt.show()	
+	#else:
+	#	plt.show()	
 	plt.close()
 	return w, m_intervals
 
@@ -191,20 +191,29 @@ def nlog_arrays(M,W):
 			logW.append(log(W[i]))
 	return array(logM), array(logW)
 
-def extract_parametres_d(filename):
+def extract_parametres(filename):
 	f = filename.split("/")[2]
 	f = f.split("_")
-	D = int(f[3]) ; N = int(f[5]) ; L = float(f[7]) ; a = float(f[9][:-4])
-	return D, N, L, a
+	params = []
+
+	for i in range(4,len(f),2):
+		if f[i-1] == "D" or f[i-1] == "N":		
+			params.append(int(f[i]))
+		elif i != len(f)-1:
+			params.append(float(f[i]))
+		else:
+			params.append(float(f[i][:-4]))
+	#D = int(f[3]) ; N = int(f[5]) ; L = float(f[7]) ; a = float(f[9][:-4])
+	return params
 
 
-def plot_loglogW(M,W,filenames,save=False):
+def plot_loglogW_d(M,W,filenames,save=False):
 
-	D, N, L, a = extract_parametres_d(filenames[0])
+	D, N, L, a = extract_parametres(filenames[0])
 	plt.figure()
 	plt.title("log-plot of w(m), N = %d, L = %f" % (N,L) )
 	for i in range(len(filenames)):
-		D, N, L, a = extract_parametres_d(filenames[i])
+		D, N, L, a = extract_parametres(filenames[i])
 
 		logM, logW = log_arrays(M[i],W[i])
 		plt.plot(logM,logW,".",markersize=0.8,label="$\\alpha = %f $" % a)
@@ -221,9 +230,9 @@ def plot_loglogW(M,W,filenames,save=False):
 
 
 def Pareto_dist_d(M,W,filenames,save=False):
-	D, N, L, a = extract_parametres_d(filenames[0])
+	D, N, L, a = extract_parametres(filenames[0])
 	fig, ax = plt.subplots(2,2)	
-	fig.suptitle("Linear Regression of log-log plot for $\omega$ \n N = %d, L = %d" % (N,L) )
+	fig.suptitle("Linear Regression of log-log plot for $\omega$ \n N = %d, L = %.1f" % (N,L) )
 	fig.text(0.5, 0.04, '$\log{10}(m)$', ha='center')
 	fig.text(0.04, 0.5, '$\log_{10}(\omega)$', va='center', rotation='vertical')	
 
@@ -234,7 +243,7 @@ def Pareto_dist_d(M,W,filenames,save=False):
 			SP.append(ax[i][j])
 	
 	for i in range(len(filenames)):
-		D, N, L, a = extract_parametres_d(filenames[i])
+		D, N, L, a = extract_parametres(filenames[i])
 		logM,logW = log_arrays(M[i],W[i])
 		
 		SI = 0 #start index for linreg
@@ -246,9 +255,9 @@ def Pareto_dist_d(M,W,filenames,save=False):
 				SI = j
 				mtemp = logM[j]
 
-		#print SI
+		print SI
 
-		EI = len(logM)-200 # end index
+		EI = len(logM)#-200 # end index
 		coeff = polyfit(logM[SI:EI],logW[SI:EI],1)
 		Linreg = coeff[0]*logM + coeff[1]
 		
@@ -265,12 +274,12 @@ def Pareto_dist_d(M,W,filenames,save=False):
 	else:
 		plt.show()
 	plt.close()	
-
+	return
 
 def Gibbs_dist_d(M,W,filenames,save=False):
-	D, N, L, a = extract_parametres_d(filenames[0])
+	D, N, L, a = extract_parametres(filenames[0])
 	fig, ax = plt.subplots(2,2)	
-	fig.suptitle("Linear Regression of log plot for $\omega$ \n N = %d, L = %d" % (N,L) )
+	fig.suptitle("Linear Regression of log plot for $\omega$ \n N = %d, L = %.1f" % (N,L) )
 	fig.text(0.5, 0.04, '$(m)$', ha='center')
 	fig.text(0.04, 0.5, '$\log(\omega)$', va='center', rotation='vertical')	
 
@@ -281,7 +290,7 @@ def Gibbs_dist_d(M,W,filenames,save=False):
 			SP.append(ax[i][j])
 	
 	for i in range(len(filenames)):
-		D, N, L, a = extract_parametres_d(filenames[i])
+		D, N, L, a = extract_parametres(filenames[i])
 		nlogM,nlogW = nlog_arrays(M[i],W[i])
 		
 		m = exp(nlogM)
@@ -298,7 +307,7 @@ def Gibbs_dist_d(M,W,filenames,save=False):
 		#print SI
 		'''
 		SI = 0
-		EI = len(m)-200 # end index
+		EI = len(m)#-200 # end index
 		coeff = polyfit(m[SI:EI],nlogW[SI:EI],1)
 		Linreg = coeff[0]*m + coeff[1]
 		
@@ -315,6 +324,8 @@ def Gibbs_dist_d(M,W,filenames,save=False):
 	else:
 		plt.show()
 	plt.close()	
+	return
+
 
 def plot_median_e(filename,save=False):
 	median = readarrays(filename)[0][0]
@@ -368,5 +379,168 @@ def plot_median_e(filename,save=False):
 
 	plt.close()
 
+def plot_prob_distribution_e(filename,save=False):
+	D,N,L,a,g = extract_parametres(filename)
+	
+	Money = []
+	
+	for R in range(4):
+		M_R = readarrays("%s_%s.txt" % (filename[:-4],R))[0]
+		for i in range(0,len(M_R)):
+			Money += list(M_R[i])
+	
+	Money = array(Money)
+	nCols = int(N/0.5)
+	plt.figure()
+	w, m_intervals, patches = plt.hist(Money,nCols,density=True)
+
+	plt.title("Probability Distribution \n N = %d, L=%.1f, $\\alpha = %.1f$, $\gamma = %.1f$" % (N,L,a,g))
+	plt.xlabel("Amount of money")
+	plt.ylabel("$w(m)$")
+	
+	if save:
+		Folder = "Plots_e_D_%s/" % D
+		plt.savefig("../Plots/Plots_e/" + Folder + "prob_dist_N_%d_L_%.1f_a_%.1f_g_%.1f" % (N,L,a,g) + ".png")
+	#else:
+	#	plt.show()	
+	plt.close()
+	return w, m_intervals
+
+
+
+
+def plot_loglogW_e(M,W,filenames,save=False):
+
+	D, N, L, a, g = extract_parametres(filenames[0])
+	plt.figure()
+	plt.title("log-plot of w(m), N = %d, L = %f, $\\alpha = %.1f$" % (N,L,a) )
+	for i in range(len(filenames)):
+		g = extract_parametres(filenames[i])[-1]
+
+		logM, logW = log_arrays(M[i],W[i])
+		plt.plot(logM,logW,".",markersize=0.8,label="$\gamma = %.1f $" % g)
+	plt.legend()
+	plt.axis([-3,2,-5,2])
+	plt.xlabel("$\log_{10}(m)$") ; plt.ylabel("$\log_{10}(w)$")
+	if save:
+		Folder = "Plots_e_D_%s/" % D
+		plt.savefig("../Plots/Plots_e/" + Folder + "Money Distribution_D_%d_N_%d_L_%.1f_a_%.1f" % (D,N,L,a) + ".png")
+	else:
+		plt.show()
+	plt.close()	
+	return
+
+def Pareto_dist_e(M,W,filenames,save=False):
+	D, N, L, a, g = extract_parametres(filenames[0])
+	fig, ax = plt.subplots(2,2)	
+	fig.suptitle("Linear Regression of log-log plot for $\omega$ \n N = %d, L = %.1f, $\\alpha$ = %.1f" % (N,L,a) )
+	fig.text(0.5, 0.04, '$\log{10}(m)$', ha='center')
+	fig.text(0.04, 0.5, '$\log_{10}(\omega)$', va='center', rotation='vertical')	
+
+
+	SP = []
+	for i in range(len(ax)):
+		for j in range(len(ax[0])):
+			SP.append(ax[i][j])
+	
+	for i in range(len(filenames)):
+		D, N, L, a, g = extract_parametres(filenames[i])
+		logM,logW = log_arrays(M[i],W[i])
 		
+		SI = 0 #start index for linreg
+		mtemp = 10		
+		eps = 0.1		
+				
+		if a == 1:		
+			for j in range(len(logM)):
+				if abs(logM[j]) < abs(mtemp):
+					SI = j
+					mtemp = logM[j]
+			EI = len(logM)-500 # end index
+		else:
+			if L == 0:
+				if g != 4:
+					SI = 5
+					EI = SI + 10 # end index
+				else:
+					SI = 14
+					EI = SI + 20
+			else:
+				if g != 4:
+					SI = 10
+					EI = SI + 30
+				else:
+					SI = 30
+					EI = SI + 10
+		#print SI
+		
+		
+		coeff = polyfit(logM[SI:EI],logW[SI:EI],1)
+		Linreg = coeff[0]*logM + coeff[1]
+		
+		
+		SP[i].plot(logM,logW,"o",markersize=0.8,label="$\omega (m ; \gamma = %.1f )$" % g)
+		SP[i].plot(logM,Linreg,label="$ %.2f \cdot \log_{10}(m) + %.2f $" % (coeff[0],coeff[1]) )
+		SP[i].legend()
+		SP[i].set_xlim(-10,2)
+		SP[i].set_ylim(-5,2)
+
+	if save:
+		Folder = "Plots_e_D_%s/" % D
+		plt.savefig("../Plots/Plots_e/" + Folder + "Linear_Regression_Pareto_D_%d_N_%d_L_%.1f_%.1f" % (D,N,L,a) + ".png")
+	else:
+		plt.show()
+	plt.close()	
+	return
+
+
+def Gibbs_dist_e(M,W,filenames,save=False):
+	D, N, L, a, g = extract_parametres(filenames[0])
+	fig, ax = plt.subplots(2,2)	
+	fig.suptitle("Linear Regression of log plot for $\omega$ \n N = %d, L = %.1f" % (N,L) )
+	fig.text(0.5, 0.04, '$(m)$', ha='center')
+	fig.text(0.04, 0.5, '$\log(\omega)$', va='center', rotation='vertical')	
+
+
+	SP = []
+	for i in range(len(ax)):
+		for j in range(len(ax[0])):
+			SP.append(ax[i][j])
+	
+	for i in range(len(filenames)):
+		D, N, L, a, g = extract_parametres(filenames[i])
+		nlogM,nlogW = nlog_arrays(M[i],W[i])
+		
+		m = exp(nlogM)
+		SI = 0 #start index for linreg
+		mtemp = 10		
+		eps = 0.1		
+		'''		
+		for j in range(len(logM)):
+						
+			if abs(logM[j]) < abs(mtemp):
+				SI = j
+				mtemp = logM[j]
+
+		#print SI
+		'''
+		SI = 0
+		EI = len(m)-500 # end index
+		coeff = polyfit(m[SI:EI],nlogW[SI:EI],1)
+		Linreg = coeff[0]*m + coeff[1]
+		
+		
+		SP[i].plot(m,nlogW,label="$\omega (m ; \\alpha = %.1f )$" % a)
+		SP[i].plot(m,Linreg,label="$ %.2f \cdot m + %.2f $" % (coeff[0],coeff[1]) )
+		SP[i].legend()
+		#SP[i].set_xlim(-1,2)
+		#SP[i].set_ylim(-5,0.5)
+
+	if save:
+		Folder = "Plots_d_D_%s/" % D
+		plt.savefig("../Plots/Plots_d/" + Folder + "Linear_Regression_Gibbs_D_%d_N_%d_L_%.1f" % (D,N,L) + ".png")
+	else:
+		plt.show()
+	plt.close()	
+	return
 
