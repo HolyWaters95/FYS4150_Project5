@@ -1,5 +1,5 @@
-from Py_Functions_a_b_c import readarrays, plot_median_c, nlog_arrays, log_arrays, P
-import Py_Functions_a_b_c as pf
+from Py_Functions_DY_lambda import readarrays, plot_median_c, nlog_arrays, log_arrays, P
+import Py_Functions_DY_lambda as pf
 from numpy import array, zeros, linspace, log, log10, exp, sort, polyfit, polyval
 from matplotlib.pyplot import *
 import matplotlib.image as pmg
