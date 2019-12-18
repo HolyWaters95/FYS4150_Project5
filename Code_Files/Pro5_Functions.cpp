@@ -31,21 +31,12 @@ void transaction(int i,int j, double lambda, vec& M){
     return;
 }
 
-void transaction_taxes(int i, int j, double t, vec& M){
+void transaction_VAT(int i, int j, double t, vec& M){
     mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
     double e = generate_canonical< double, 128 > (rng);
     double S = M(i)+M(j);
     double mi = e*S;
     double mj = (1-e)*S;
-    /*
-    M(i) = mi ; M(j) = mj;
-    double T = 0;
-    for (uword i=0;i<M.n_elem;i++){
-        T += t*M(i);
-        M(i) = (1-t)*M(i);
-    }
-    M += T/M.n_elem;
-    */
 
     double trans = mi - M(i);
     double Tax = abs(trans)/(1+1/t);
@@ -59,7 +50,56 @@ void transaction_taxes(int i, int j, double t, vec& M){
     return;
 } // end of transaction_taxes
 
-vector<int> Sampling_Rule(vec M, mat& c, vec& A, mat& D, double alpha = 0, double gamma = 0){
+void wealth_tax(vec& M,double t){
+    double tax = 0;
+    for (uword i = 0;i<M.n_elem;i++){
+        tax += t*M(i);
+        M(i) -= t*M(i);
+    }
+    M += tax / M.n_elem;
+} //end wealth_tax
+
+vector<int> Sampling_Rule(vec M, mat& c,int C, double alpha = 0, double gamma = 0){
+    mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
+    vector<int> index = vector<int>{0, 0};
+    int N = M.n_elem;
+
+    int i1 = 0; int i2 = 0;
+    int confirm = 0;
+
+    double P = 0;
+    double r = 0;
+    double delta_m = 0;
+
+
+    while (i1 == i2 or confirm == 0){
+    confirm = 0;
+    i1 = static_cast<int>( (generate_canonical< double, 128 > (rng))*static_cast<double>(N) );
+    i2 = static_cast<int>( (generate_canonical< double, 128 > (rng))*static_cast<double>(N) );
+    delta_m = abs(M(i1) - M(i2));
+    if (delta_m < EPS){
+        P = 1.0;
+    }
+    else{
+        P = pow(delta_m, -alpha) * (static_cast<double>(N)/C)*pow(c(i1,i2)+1,gamma);
+
+    }
+    r = generate_canonical< double, 128 > (rng);
+
+    if (r < P){
+        confirm = 1;
+    } //end if
+
+    } //end while
+    index[0] = i1 ; index[1] = i2;
+
+    c(i1,i2) += 1;
+    c(i2,i1) += 1;
+
+    return index;
+} // end function Sampling_Rule
+
+vector<int> Sampling_Rule_scaled(vec M, mat& c, vec& A, mat& D, double alpha = 0, double gamma = 0){
     mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
     vector<int> index = vector<int>{0, 0};
     int N = M.n_elem;
@@ -92,8 +132,7 @@ vector<int> Sampling_Rule(vec M, mat& c, vec& A, mat& D, double alpha = 0, doubl
     if (r < P){
         confirm = 1;
     } //end if
-    //cout << i1 << "  " << i2 << "   " << S1 << " " << S2 << endl;
-    //cout << delta_m << "   " << P << "   " << r << "   " << "   " << confirm << endl;
+
     } //end while
     index[0] = i1 ; index[1] = i2;
     A(i1) = A(i1) - pow(c(i1,i2)+1,gamma); A(i2) = A(i2) - pow(c(i1,i2)+1,gamma);
@@ -103,21 +142,19 @@ vector<int> Sampling_Rule(vec M, mat& c, vec& A, mat& D, double alpha = 0, doubl
     A(i1) = A(i1) + pow(c(i1,i2)+1,gamma); A(i2) = A(i2) + pow(c(i1,i2)+1,gamma);
 
     return index;
-} // end function Sampling_Rule
+} // end function Sampling_Rule_scaled
 
 void Financial_analysis(int Ex, int Cycles, int N, string file1, string file2, double lambda = 0, double alpha = 0, double gamma = 0){
     mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
     int m0 = 1;
     vec M;
-    mat D;
-    vec m = m_vector(0,N*m0,(N*m0)/500);
 
     int thread_id;
     int counter;
     string filename1;
     string filename2 = "../Results/" + file2 + ".txt";
 
-    #pragma omp parallel private(thread_id, counter,filename1, M,D)
+    #pragma omp parallel private(thread_id, counter,filename1, M)
     {
     thread_id = omp_get_thread_num();
     counter = 0;
@@ -127,25 +164,15 @@ void Financial_analysis(int Ex, int Cycles, int N, string file1, string file2, d
     for (int i = 0;i<Ex;i++){
         M = m0*vec(N,fill::ones);
         mat c = mat(M.n_elem,M.n_elem,fill::zeros);
-        vec A = vec(N,fill::zeros); D = mat(N,N,fill::zeros);
-        for (int aa = 0;aa<N;aa++){
-            A(aa) = N - 1;
-        }
+
 
         // Start MC loop
         for (int j = 0; j<Cycles;j++){
 
-            //if (thread_id == 0 and j % 1000 == 0){cout << "experiment " << i << "  cycle " << j << endl;}
+            vector<int> index = Sampling_Rule(M,c,Cycles,alpha,gamma);
 
-            vector<int> index = Sampling_Rule(M,c,A,D,alpha,gamma);
-            //cout << "passed sampling rule \n";
-            transaction(index[0],index[1],lambda,M);
-
-            for (int k = 0;k<N;k++){
-                D(index[0],k) = pow(abs(M(index[0])-M(k)),-alpha); D(k,index[0]) = D(index[0],k);
-                D(index[1],k) = pow(abs(M(index[1])-M(k)),-alpha); D(k,index[1]) = D(index[1],k);
-            }
-            D(index[0],index[0]) = 0; D(index[1],index[1]) = 0;
+            transaction(index[0],index[1],0,M);
+            wealth_tax(M,lambda);
 
             if(thread_id==0 and counter==0){
                 if(j == 0){
@@ -201,7 +228,7 @@ void Financial_analysis(int Ex, int Cycles, int N, string file1, string file2, d
     return;
 } // end of function Financial_analysis
 
-void Financial_analysis_e(int Ex, int Cycles, int N, string file1, string file2, double lambda = 0, double alpha = 0, double gamma = 0){
+void Financial_analysis_scaled_prob(int Ex, int Cycles, int N, string file1, string file2, double lambda = 0, double alpha = 0, double gamma = 0){
     mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
     int m0 = 1;
     vec M;
@@ -231,7 +258,7 @@ void Financial_analysis_e(int Ex, int Cycles, int N, string file1, string file2,
         for (int j = 0; j<Cycles+250000;j++){
 
 
-            vector<int> index = Sampling_Rule(M,c,A,D,alpha,gamma);
+            vector<int> index = Sampling_Rule_scaled(M,c,A,D,alpha,gamma);
 
             transaction(index[0],index[1],lambda,M);
 
@@ -241,25 +268,6 @@ void Financial_analysis_e(int Ex, int Cycles, int N, string file1, string file2,
             }
             D(index[0],index[0]) = 0; D(index[1],index[1]) = 0;
 
-            /*if(thread_id==0 and counter==0){
-                if(j == 0){
-                vec M_temp = sort(M);
-                double median = (M_temp(249) + M_temp(250))/2;
-                ofstream output;
-                output.open(filename2,ios::out);
-                output << median << endl;
-                output.close();
-                }
-                else if (j % (Cycles/100) == 0) {
-                vec M_temp = sort(M);
-                double median = (M_temp(249) + M_temp(250))/2;
-                ofstream output;
-                output.open(filename2,ios::app);
-                output << median << endl;
-                output.close();
-                }
-
-            }*/
 
             //measuring states
             if(j >= Cycles){
@@ -295,7 +303,7 @@ void Financial_analysis_e(int Ex, int Cycles, int N, string file1, string file2,
     } //end Experiment loop
     } //end pragma
     return;
-} // end of function Financial_analysis_e
+} // end of function Financial_analysis_scaled_prob
 
 
 
@@ -352,7 +360,7 @@ void task_d(int Ex, int Cycles){
                      << "a = " << alpha << endl;
                 time_t start, finish;
                 start = clock();
-                Financial_analysis_e(Ex,Cycles,N,"Test_Money_distributions" + numbers,"Test_Median"+numbers,L, alpha);
+                Financial_analysis(Ex,Cycles,N,"Test_Money_distributions" + numbers,"Test_Median"+numbers,L, alpha);
                 finish = clock();
                 cout << "time used by function Financial_analysis: " << (double) (finish-start)/CLOCKS_PER_SEC << " seconds" << endl << endl;
             }
@@ -383,7 +391,7 @@ void task_e(int Ex, int Cycles){
                      << "g = " << gamma << endl;
                 time_t start, finish;
                 start = clock();
-                Financial_analysis_e(Ex,Cycles,N,"TEST2_Money_distributions" + numbers,"TEST2_Median"+numbers,L, alpha,gamma);
+                Financial_analysis(Ex,Cycles,N,"TEST2_Money_distributions" + numbers,"TEST2_Median"+numbers,L, alpha,gamma);
                 finish = clock();
                 cout << "time used by function Financial_analysis: " << (double) (finish-start)/CLOCKS_PER_SEC << " seconds" << endl << endl;
             }
@@ -392,4 +400,22 @@ void task_e(int Ex, int Cycles){
     return;
 } //end of task e
 
+void taxes(int Ex, int Cycles){
+    cout << "Taxes \n ------------------" << endl;
+    int D = static_cast<int>(log10(Cycles));
+    vec tax_percent = vec("0.10 0.25 0.5 0.9");
+    int N = 500;
+    for (uword i = 0;i<tax_percent.n_elem;i++){
+        double T = tax_percent(i);
+        cout << "Running Financial Analysis for t = " << T << endl;
+
+        string numbers = "_D_" + to_string(D) + "_N_" + to_string(N) + "_t_" + to_string(T);
+        time_t start, finish;
+        start = clock();
+        Financial_analysis(Ex,Cycles,N,"Taxes_Wealth" + numbers,"Median_WealthTax" + numbers,T);
+        finish = clock();
+        cout << "time used by function Financial_analysis: " << (double) (finish-start)/CLOCKS_PER_SEC << " seconds" << endl << endl;
+    }
+    return;
+} //end of taxes
 
